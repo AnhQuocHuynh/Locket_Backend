@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "locket-backend-api-collection",
 		"name": "Locket Backend API",
-		"description": "Complete API collection for Locket Clone Backend testing",
+		"description": "Complete API collection for Locket Clone Backend testing - Updated with Friend System",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -172,6 +172,198 @@
 							}
 						]
 					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Logout user (client should clear token)"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Friends",
+			"item": [
+				{
+					"name": "Send Friend Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"recipientId\": \"USER_ID_HERE\",\n  \"message\": \"Hi! Let's be friends!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/friends/request",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"friends",
+								"request"
+							]
+						},
+						"description": "Send friend request to another user"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Accept Friend Request",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/friends/accept/FRIENDSHIP_ID_HERE",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"friends",
+								"accept",
+								"FRIENDSHIP_ID_HERE"
+							]
+						},
+						"description": "Accept a pending friend request"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Get Friends List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/friends?page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"friends"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get user's friends list with pagination"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Get Friend Requests",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/friends/requests",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"friends",
+								"requests"
+							]
+						},
+						"description": "Get pending friend requests received"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Remove Friend",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/friends/FRIENDSHIP_ID_HERE",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"friends",
+								"FRIENDSHIP_ID_HERE"
+							]
+						},
+						"description": "Remove friend or cancel friend request"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
 				}
 			]
 		},
@@ -202,7 +394,7 @@
 								}
 							]
 						},
-						"description": "Get all posts with pagination"
+						"description": "Get all posts (feed) with pagination"
 					},
 					"auth": {
 						"type": "bearer",
@@ -217,24 +409,6 @@
 				},
 				{
 					"name": "Create Post",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Save post ID for other requests",
-									"if (pm.response.code === 201) {",
-									"    const response = pm.response.json();",
-									"    if (response.success && response.data._id) {",
-									"        pm.collectionVariables.set(\"postId\", response.data._id);",
-									"        console.log(\"Post ID saved:\", response.data._id);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -245,7 +419,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"imageUrl\": \"https://example.com/test-image.jpg\",\n  \"caption\": \"This is a test post from Postman\"\n}"
+							"raw": "{\n  \"imageUrl\": \"https://picsum.photos/400/400\",\n  \"caption\": \"My awesome post! 🚀\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/posts",
@@ -275,16 +449,16 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/posts/{{postId}}",
+							"raw": "{{baseUrl}}/posts/POST_ID_HERE",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"posts",
-								"{{postId}}"
+								"POST_ID_HERE"
 							]
 						},
-						"description": "Get a single post by ID"
+						"description": "Get single post by ID"
 					},
 					"auth": {
 						"type": "bearer",
@@ -309,19 +483,47 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"caption\": \"Updated caption from Postman\"\n}"
+							"raw": "{\n  \"caption\": \"Updated caption text\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/posts/{{postId}}",
+							"raw": "{{baseUrl}}/posts/POST_ID_HERE",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"posts",
-								"{{postId}}"
+								"POST_ID_HERE"
 							]
 						},
-						"description": "Update an existing post"
+						"description": "Update post caption"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Delete Post",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/posts/POST_ID_HERE",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"posts",
+								"POST_ID_HERE"
+							]
+						},
+						"description": "Delete post (soft delete)"
 					},
 					"auth": {
 						"type": "bearer",
@@ -340,13 +542,13 @@
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/posts/{{postId}}/like",
+							"raw": "{{baseUrl}}/posts/POST_ID_HERE/like",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"posts",
-								"{{postId}}",
+								"POST_ID_HERE",
 								"like"
 							]
 						},
@@ -375,20 +577,20 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"text\": \"This is a test comment from Postman\"\n}"
+							"raw": "{\n  \"text\": \"This is a great post!\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/posts/{{postId}}/comment",
+							"raw": "{{baseUrl}}/posts/POST_ID_HERE/comment",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"posts",
-								"{{postId}}",
+								"POST_ID_HERE",
 								"comment"
 							]
 						},
-						"description": "Add a comment to a post"
+						"description": "Add comment to a post"
 					},
 					"auth": {
 						"type": "bearer",
@@ -402,21 +604,32 @@
 					}
 				},
 				{
-					"name": "Delete Post",
+					"name": "Get User Posts",
 					"request": {
-						"method": "DELETE",
+						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/posts/{{postId}}",
+							"raw": "{{baseUrl}}/posts/user/USER_ID_HERE?page=1&limit=10",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"posts",
-								"{{postId}}"
+								"user",
+								"USER_ID_HERE"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
 							]
 						},
-						"description": "Delete a post (soft delete)"
+						"description": "Get posts by specific user"
 					},
 					"auth": {
 						"type": "bearer",
@@ -473,11 +686,6 @@
 		},
 		{
 			"key": "token",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "postId",
 			"value": "",
 			"type": "string"
 		}

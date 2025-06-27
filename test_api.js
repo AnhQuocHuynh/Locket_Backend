@@ -86,14 +86,19 @@ async function testHealthCheck() {
 async function testRootEndpoint() {
     log('\n🔍 Testing Root Endpoint', 'blue');
     
-    const response = await makeRequest('GET', '');
-    
-    if (response.success && response.data.success) {
-        log('✅ Root endpoint test passed', 'green');
-        console.log('   Response:', JSON.stringify(response.data, null, 2));
-    } else {
+    // Test the actual root endpoint at /
+    try {
+        const response = await axios.get(BASE_URL);
+        if (response.data && response.data.success) {
+            log('✅ Root endpoint test passed', 'green');
+            console.log('   Response:', JSON.stringify(response.data, null, 2));
+        } else {
+            log('❌ Root endpoint test failed', 'red');
+            console.log('   Unexpected response:', response.data);
+        }
+    } catch (error) {
         log('❌ Root endpoint test failed', 'red');
-        console.log('   Error:', response.error);
+        console.log('   Error:', error.response?.data || error.message);
     }
 }
 

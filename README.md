@@ -150,8 +150,6 @@ npm install && npm start
 - 📱 **Mobile ready** with Android emulator support
 - 👥 **Team collaboration** with shared MongoDB Atlas
 
-**🚀 Backend hoàn chỉnh và sẵn sàng cho production!**
-
 ---
 
 **📚 Need detailed help?** → Check [docs/](docs/) folder cho complete guides.
