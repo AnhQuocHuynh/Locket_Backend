@@ -7,16 +7,23 @@ const authenticate = async (req, res, next) => {
     try {
         let token;
 
-        // Get token from header
-        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-            token = req.headers.authorization.split(' ')[1];
+        // Get token from header and validate it
+        if (
+            req.headers.authorization &&
+            req.headers.authorization.startsWith('Bearer')
+        ) {
+            const tokenPart = req.headers.authorization.split(' ')[1];
+            // Prevent string "null" or "undefined" from being treated as a token
+            if (tokenPart && tokenPart !== 'null' && tokenPart !== 'undefined') {
+                token = tokenPart;
+            }
         }
 
         // Make sure token exists
         if (!token) {
             return res.status(401).json({
                 success: false,
-                message: 'Access denied. No token provided.'
+                message: 'Access denied. No token provided or token is malformed.'
             });
         }
 

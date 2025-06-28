@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -7,6 +8,7 @@ const config = require('./config');
 // Route imports
 const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/posts');
+const friendshipRoutes = require('./routes/friendship');
 
 // Initialize express app
 const app = express();
@@ -30,6 +32,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/friendship', friendshipRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -50,7 +53,8 @@ app.get('/', (req, res) => {
         endpoints: {
             auth: '/api/auth',
             posts: '/api/posts',
-            health: '/api/health'
+            health: '/api/health',
+            friendship: '/api/friendship'
         }
     });
 });

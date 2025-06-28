@@ -2,6 +2,7 @@ const express = require('express');
 const Post = require('../models/Post');
 const { authenticate } = require('../middleware/auth');
 const { validatePost, validateComment } = require('../middleware/validation');
+const Friendship = require('../models/Friendship');
 
 const router = express.Router();
 
@@ -38,6 +39,59 @@ router.get('/', authenticate, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Server error fetching posts',
+            error: error.message
+        });
+    }
+});
+
+// @route   GET /api/posts/friends
+// @desc    Get all posts by friends (feed)
+// @access  Private
+router.get('/friends', authenticate, async (req, res) => {
+    try {
+        // Lấy danh sách bạn bè từ model Friendship
+        const friendships = await Friendship.getFriendsList(req.user.id);
+
+        // Lấy ID của bạn bè.
+        // Logic này được sửa lại để xử lý đúng dữ liệu trả về từ getFriendsList,
+        // vốn là một danh sách các document Friendship.
+        const friendIds = friendships.map(friend => friend._id)
+
+        // Lấy post của bạn bè (và có thể cả chính user)
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const posts = await Post.find({
+            user: { $in: [...friendIds, req.user.id] },
+            isActive: true
+        })
+        .populate('user', 'username profilePicture')
+        .populate('likes.user', 'username')
+        .populate('comments.user', 'username')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+        const total = await Post.countDocuments({
+            user: { $in: [...friendIds, req.user.id] },
+            isActive: true
+        });
+
+        res.json({
+            success: true,
+            data: posts,
+            pagination: {
+                page,
+                pages: Math.ceil(total / limit),
+                total
+            }
+        });
+    } catch (error) {
+        console.error('Get friends posts error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error fetching friends posts',
             error: error.message
         });
     }

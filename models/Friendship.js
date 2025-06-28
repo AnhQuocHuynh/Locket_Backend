@@ -89,6 +89,82 @@ FriendshipSchema.statics.acceptFriendship = async function(friendshipId, userId)
     return friendship;
 };
 
+// Static method to decline a friend request
+FriendshipSchema.statics.declineFriendship = async function(friendshipId, userId) {
+    const friendship = await this.findById(friendshipId);
+
+    if (!friendship) {
+        throw new Error('Friendship not found');
+    }
+
+    if (friendship.recipient.toString() !== userId.toString()) {
+        throw new Error('Only the recipient can decline the friend request');
+    }
+
+    if (friendship.status !== 'pending') {
+        throw new Error('Friend request is not pending');
+    }
+
+    friendship.status = 'declined';
+    await friendship.save();
+    return friendship;
+};
+
+// Static method to cancel a sent friend request
+FriendshipSchema.statics.cancelFriendship = async function(friendshipId, userId) {
+    const friendship = await this.findById(friendshipId);
+
+    if (!friendship) {
+        throw new Error('Friendship not found');
+    }
+
+    if (friendship.requester.toString() !== userId.toString()) {
+        throw new Error('Only the requester can cancel the friend request');
+    }
+
+    if (friendship.status !== 'pending') {
+        throw new Error('Cannot cancel a request that is not pending');
+    }
+
+    // Instead of deleteOne(), use findByIdAndDelete() for consistency
+    await this.findByIdAndDelete(friendshipId);
+    return true;
+};
+
+// Static method to remove friendship
+FriendshipSchema.statics.removeFriendship = async function(friendshipId, userId) {
+    const friendship = await this.findById(friendshipId);
+
+    if (!friendship) {
+        throw new Error('Friendship not found');
+    }
+
+    // Check if the user is part of this friendship
+    if (
+        friendship.requester.toString() !== userId.toString() &&
+        friendship.recipient.toString() !== userId.toString()
+    ) {
+        throw new Error('Not authorized to remove this friendship');
+    }
+
+    const requesterId = friendship.requester;
+    const recipientId = friendship.recipient;
+
+    // Remove users from each other's friends list
+    const User = mongoose.model('User');
+    await User.findByIdAndUpdate(requesterId, {
+        $pull: { friends: recipientId }
+    });
+    await User.findByIdAndUpdate(recipientId, {
+        $pull: { friends: requesterId }
+    });
+
+    // Delete the friendship document
+    await this.findByIdAndDelete(friendshipId);
+
+    return true; // Indicate success
+};
+
 // Static method to get friends list
 FriendshipSchema.statics.getFriendsList = async function(userId) {
     const friendships = await this.find({
