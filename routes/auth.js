@@ -190,4 +190,28 @@ router.put('/profile', authenticate, async (req, res) => {
     }
 });
 
+// @route   POST /api/auth/logout
+// @desc    Logout user (client should clear token)
+// @access  Private
+router.post('/logout', authenticate, async (req, res) => {
+    try {
+        // Update last seen time
+        await User.findByIdAndUpdate(req.user.id, {
+            lastSeen: new Date()
+        });
+
+        res.json({
+            success: true,
+            message: 'Logged out successfully'
+        });
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error during logout',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router; 

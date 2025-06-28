@@ -134,24 +134,6 @@ curl -X POST http://localhost:3000/api/auth/login \
 
 ## 📱 **POSTMAN COMPLETE SETUP**
 
-### **🔧 PHASE 1: Installation**
-
-#### **Download & Install:**
-1. Truy cập: https://www.postman.com/downloads/
-2. Download phiên bản phù hợp (Windows/macOS/Linux)
-3. Install và mở Postman
-
-#### **Auto-download script:**
-```bash
-# Windows
-.\download-postman.bat
-
-# macOS/Linux
-./download-postman.sh
-```
-
-### **🔧 PHASE 2: Collection Setup**
-
 #### **Import Ready-made Collection:**
 1. Mở Postman
 2. Click **Import** 
