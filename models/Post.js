@@ -15,6 +15,10 @@ const PostSchema = new mongoose.Schema({
         trim: true,
         maxlength: [200, 'Caption cannot exceed 200 characters']
     },
+    category: {
+        type: String,
+        trim: true
+    },
     likes: [{
         user: {
             type: mongoose.Schema.ObjectId,

@@ -3,6 +3,7 @@ const Post = require('../models/Post');
 const { authenticate } = require('../middleware/auth');
 const { validatePost, validateComment } = require('../middleware/validation');
 const Friendship = require('../models/Friendship');
+const { classifyImage } = require('../services/geminiService');
 
 const router = express.Router();
 
@@ -39,6 +40,74 @@ router.get('/', authenticate, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Server error fetching posts',
+            error: error.message
+        });
+    }
+});
+
+// @route   GET /api/posts/friends
+// @desc    Get all posts by friends (feed)
+// @access  Private
+// @route   GET /api/posts/category/:categoryName
+// @desc    Get posts by friends from a specific category
+// @access  Private
+router.get('/category/:categoryName', authenticate, async (req, res) => {
+    try {
+        const { categoryName } = req.params;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        // 1. Find all accepted friendships for the current user
+        const friendships = await Friendship.find({
+            $or: [{ requester: req.user.id }, { recipient: req.user.id }],
+            status: 'accepted'
+        });
+
+        // 2. Extract friend IDs
+        const friendIds = friendships.map(friendship => 
+            friendship.requester.toString() === req.user.id.toString()
+                ? friendship.recipient
+                : friendship.requester
+        );
+        
+        // Include user's own posts
+        const userAndFriendIds = [...friendIds, req.user.id];
+
+        // 3. Find posts from friends (and user) in the specified category
+        const posts = await Post.find({
+            user: { $in: userAndFriendIds },
+            category: categoryName,
+            isActive: true
+        })
+        .populate('user', 'username profilePicture')
+        .populate('likes.user', 'username')
+        .populate('comments.user', 'username')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+        const total = await Post.countDocuments({
+            user: { $in: userAndFriendIds },
+            category: categoryName,
+            isActive: true
+        });
+
+        res.json({
+            success: true,
+            data: posts,
+            pagination: {
+                page,
+                pages: Math.ceil(total / limit),
+                total
+            }
+        });
+
+    } catch (error) {
+        console.error(`Get posts by category error:`, error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error fetching posts by category',
             error: error.message
         });
     }
@@ -117,8 +186,25 @@ router.post('/', authenticate, validatePost, async (req, res) => {
             caption: caption || ''
         });
 
-        // Populate user data
+        // Populate user data before sending the response
         await post.populate('user', 'username profilePicture');
+
+        // Asynchronously classify the image without blocking the response.
+        // The classification will be saved in the background.
+        classifyImage(post.imageUrl)
+            .then(category => {
+                post.category = category;
+                // This save is async and won't block anything.
+                return post.save();
+            })
+            .then(() => {
+                console.log(`Post ${post._id} classified and saved successfully as ${post.category}`);
+            })
+            .catch(error => {
+                // Log the error but don't crash the request.
+                // The post is already created, just without a category.
+                console.error(`Failed to classify image for post ${post._id}:`, error.message);
+            });
 
         res.status(201).json({
             success: true,
