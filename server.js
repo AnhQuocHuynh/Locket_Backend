@@ -8,8 +8,10 @@ const config = require('./config');
 // Route imports
 const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/posts');
+const geminiRoutes = require('./routes/gemini');
 const friendshipRoutes = require('./routes/friendship');
 const userRoutes = require('./routes/user');
+const styleRoutes = require('./routes/style');
 
 // Initialize express app
 const app = express();
@@ -35,6 +37,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/friendship', friendshipRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/gemini', geminiRoutes);
+app.use('/api/style', styleRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
