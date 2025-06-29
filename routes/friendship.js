@@ -2,6 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Friendship = require('../models/Friendship');
 const { authenticate } = require('../middleware/auth');
+const crypto = require('crypto');
+const User = require('../models/User');
+const FriendshipToken = require('../models/FriendshipToken');
 
 const router = express.Router();
 
@@ -70,7 +73,7 @@ router.delete('/cancel/:id', authenticate, checkObjectId('id'), async (req, res)
 // Xóa bạn
 router.delete('/remove/:id', authenticate, checkObjectId('id'), async (req, res) => {
     try {
-        await Friendship.removeFriendship(req.params.id, req.user.id);
+        await Friendship.removeFriendship(req.user.id, req.params.id);
         res.json({ success: true, message: 'Friend removed successfully' });
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });
@@ -106,6 +109,102 @@ router.get('/pending/sent', authenticate, async (req, res) => {
         res.json({ success: true, data: requests });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// @route   POST /api/friendship/generate-link
+// @desc    Tạo link mời kết bạn
+// @access  Private
+router.post('/generate-link', authenticate, async (req, res) => {
+    try {
+        const senderId = req.user.id;
+
+        // Tạo một token ngẫu nhiên, an toàn
+        const token = crypto.randomBytes(16).toString('hex');
+
+        // Lưu token vào database
+        await FriendshipToken.create({
+            token: token,
+            sender: senderId,
+        });
+
+        // Lấy base URL từ biến môi trường, với giá trị mặc định cho local
+        const port = process.env.PORT || 3000;
+        const baseUrl = process.env.APP_BASE_URL || `http://localhost:${port}`;
+        const shareableLink = `${baseUrl}/add-friend/${token}`;
+
+        res.status(200).json({ 
+            success: true, 
+            link: shareableLink 
+        });
+
+    } catch (error) {
+        console.error('Lỗi khi tạo link mời:', error.message);
+        res.status(500).json({ success: false, message: 'Lỗi Server' });
+    }
+});
+
+// @route   POST /api/friendship/accept-link
+// @desc    Chấp nhận lời mời kết bạn qua link
+// @access  Private
+router.post('/accept-link', authenticate, async (req, res) => {
+    const { token } = req.body;
+    const recipientId = req.user.id; // Người nhận là người dùng đang đăng nhập
+
+    if (!token) {
+        return res.status(400).json({ success: false, message: 'Token là bắt buộc.' });
+    }
+
+    try {
+        // Tìm token trong DB
+        const friendshipToken = await FriendshipToken.findOne({ token });
+
+        if (!friendshipToken) {
+            return res.status(404).json({ success: false, message: 'Link mời không hợp lệ hoặc đã hết hạn.' });
+        }
+
+        const senderId = friendshipToken.sender;
+
+        // Không thể tự kết bạn với chính mình
+        if (senderId.toString() === recipientId.toString()) {
+            return res.status(400).json({ success: false, message: 'Bạn không thể tự kết bạn với chính mình.' });
+        }
+
+        // Kiểm tra xem đã là bạn bè chưa
+        const existingFriendship = await Friendship.findOne({
+            $or: [
+                { requester: senderId, recipient: recipientId },
+                { requester: recipientId, recipient: senderId },
+            ],
+        });
+
+        if (existingFriendship) {
+            // Xóa token sau khi sử dụng
+            // await friendshipToken.deleteOne();
+            return res.status(400).json({ success: false, message: 'Hai bạn đã là bạn bè.' });
+        }
+
+        // Tạo mối quan hệ bạn bè mới, mặc định là 'accepted'
+        await Friendship.create({
+            requester: senderId,
+            recipient: recipientId,
+            status: 'accepted',
+        });
+
+        // Xóa token sau khi đã sử dụng thành công
+        // await friendshipToken.deleteOne();
+
+        const sender = await User.findById(senderId).select('username profilePicture');
+
+        res.status(200).json({ 
+            success: true, 
+            message: `Bạn đã kết bạn thành công với ${sender.username}.`,
+            friend: sender
+        });
+
+    } catch (error) {
+        console.error('Lỗi khi chấp nhận link mời:', error.message);
+        res.status(500).json({ success: false, message: 'Lỗi Server' });
     }
 });
 

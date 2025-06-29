@@ -132,37 +132,36 @@ FriendshipSchema.statics.cancelFriendship = async function(friendshipId, userId)
 };
 
 // Static method to remove friendship
-FriendshipSchema.statics.removeFriendship = async function(friendshipId, userId) {
-    const friendship = await this.findById(friendshipId);
-
-    if (!friendship) {
-        throw new Error('Friendship not found');
-    }
-
-    // Check if the user is part of this friendship
-    if (
-        friendship.requester.toString() !== userId.toString() &&
-        friendship.recipient.toString() !== userId.toString()
-    ) {
-        throw new Error('Not authorized to remove this friendship');
-    }
-
-    const requesterId = friendship.requester;
-    const recipientId = friendship.recipient;
-
-    // Remove users from each other's friends list
+FriendshipSchema.statics.removeFriendship = async function(currentUserId, friendToRemoveId) {
     const User = mongoose.model('User');
-    await User.findByIdAndUpdate(requesterId, {
-        $pull: { friends: recipientId }
-    });
-    await User.findByIdAndUpdate(recipientId, {
-        $pull: { friends: requesterId }
+
+    // 1. Tìm bản ghi Friendship giữa hai người dùng.
+    // Đây là nguồn dữ liệu chính xác nhất cho mối quan hệ.
+    const friendship = await this.findOne({
+        $or: [
+            { requester: currentUserId, recipient: friendToRemoveId },
+            { requester: friendToRemoveId, recipient: currentUserId }
+        ]
     });
 
-    // Delete the friendship document
-    await this.findByIdAndDelete(friendshipId);
+    // Nếu không tìm thấy, họ không phải là bạn bè để xóa.
+    if (!friendship) {
+        throw new Error('Không tìm thấy mối quan hệ bạn bè.');
+    }
 
-    return true; // Indicate success
+    // 2. Xóa ID của nhau khỏi mảng 'friends' của mỗi người.
+    // Lệnh $pull sẽ xóa an toàn ID khỏi mảng.
+    await User.findByIdAndUpdate(currentUserId, {
+        $pull: { friends: friendToRemoveId }
+    });
+    await User.findByIdAndUpdate(friendToRemoveId, {
+        $pull: { friends: currentUserId }
+    });
+
+    // 3. Cuối cùng, xóa bản ghi Friendship.
+    await this.findByIdAndDelete(friendship._id);
+
+    return true; // Báo hiệu thành công
 };
 
 // Static method to get friends list
