@@ -40,7 +40,7 @@ async function urlToGenerativePart(url) {
 async function classifyImage(imageUrl) {
     try {
         // Sử dụng model gemini-1.5-flash, một model đa phương thức hiệu quả
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         const prompt = 'Phân loại hình ảnh này vào một trong các danh mục sau hoặc đề xuất một danh mục mới phù hợp nếu không có danh mục nào khớp: Đồ ăn, Phong cảnh, Vui nhộn, Con người, Động vật, Nghệ thuật, Thời trang, Thể thao, Công nghệ, Khác. Chỉ trả về tên danh mục dưới dạng một từ duy nhất.';
 
