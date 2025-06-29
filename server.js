@@ -9,6 +9,7 @@ const config = require('./config');
 const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/posts');
 const friendshipRoutes = require('./routes/friendship');
+const userRoutes = require('./routes/user');
 
 // Initialize express app
 const app = express();
@@ -33,6 +34,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/friendship', friendshipRoutes);
+app.use('/api/user', userRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
