@@ -7,7 +7,8 @@ const config = require('./config');
 // Route imports
 const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/posts');
-const friendRoutes = require('./routes/friends');
+const notificationRoutes = require('./routes/notifications');
+const userRoutes = require('./routes/users');
 
 // Initialize express app
 const app = express();
@@ -31,7 +32,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
-app.use('/api/friends', friendRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/users', userRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -52,7 +54,8 @@ app.get('/', (req, res) => {
         endpoints: {
             auth: '/api/auth',
             posts: '/api/posts',
-            friends: '/api/friends',
+            notifications: '/api/notifications',
+            users: '/api/users',
             health: '/api/health'
         }
     });

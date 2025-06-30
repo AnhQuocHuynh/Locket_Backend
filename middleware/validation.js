@@ -1,4 +1,4 @@
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 
 // Handle validation errors
 const handleValidationErrors = (req, res, next) => {
@@ -73,10 +73,101 @@ const validateComment = [
     handleValidationErrors
 ];
 
+// Validation rules for notification ID
+const validateNotificationId = [
+    param('id')
+        .isMongoId()
+        .withMessage('Invalid notification ID format'),
+    
+    handleValidationErrors
+];
+
+// Validation rules for change password
+const validateChangePassword = [
+    body('currentPassword')
+        .notEmpty()
+        .withMessage('Current password is required'),
+    
+    body('newPassword')
+        .isLength({ min: 6 })
+        .withMessage('New password must be at least 6 characters long')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+        .withMessage('New password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    
+    body('confirmPassword')
+        .custom((value, { req }) => {
+            if (value !== req.body.newPassword) {
+                throw new Error('Password confirmation does not match new password');
+            }
+            return true;
+        }),
+    
+    handleValidationErrors
+];
+
+// Validation rules for forgot password
+const validateForgotPassword = [
+    body('email')
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('Please provide a valid email'),
+    
+    handleValidationErrors
+];
+
+// Validation rules for reset password
+const validateResetPassword = [
+    body('token')
+        .notEmpty()
+        .withMessage('Reset token is required'),
+    
+    body('newPassword')
+        .isLength({ min: 6 })
+        .withMessage('New password must be at least 6 characters long')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+        .withMessage('New password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    
+    body('confirmPassword')
+        .custom((value, { req }) => {
+            if (value !== req.body.newPassword) {
+                throw new Error('Password confirmation does not match new password');
+            }
+            return true;
+        }),
+    
+    handleValidationErrors
+];
+
+// Validation rules for email verification
+const validateEmailVerification = [
+    body('token')
+        .notEmpty()
+        .withMessage('Verification token is required'),
+    
+    handleValidationErrors
+];
+
+// Validation rules for user search
+const validateUserSearch = [
+    body('q')
+        .optional()
+        .trim()
+        .isLength({ min: 2 })
+        .withMessage('Search query must be at least 2 characters long'),
+    
+    handleValidationErrors
+];
+
 module.exports = {
     validateRegister,
     validateLogin,
     validatePost,
     validateComment,
+    validateNotificationId,
+    validateChangePassword,
+    validateForgotPassword,
+    validateResetPassword,
+    validateEmailVerification,
+    validateUserSearch,
     handleValidationErrors
 }; 

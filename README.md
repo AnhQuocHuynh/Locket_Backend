@@ -52,13 +52,13 @@ npm run test-api
 ```
 Locket_Backend/
 ├── 📁 docs/                     # Complete documentation
+├── 📁 tests/                    # Test scripts & automation
 ├── 📁 models/                   # Database schemas
 ├── 📁 routes/                   # API endpoints
 ├── 📁 middleware/               # Authentication & validation
 ├── 🚀 start.bat/.sh            # Platform automation
 ├── 🔄 switch-database.bat/.sh   # Database switching
 ├── 📱 Locket_API_Collection.json # Postman collection
-├── 🧪 test_api.js               # Automated testing
 └── ⚙️ .env                      # Configuration
 ```
 
@@ -108,8 +108,18 @@ npm install && npm start
 2. Xem logs trong terminal
 3. Check database connection
 
+### **Test APIs?**
+```bash
+# Run comprehensive tests
+node tests/test_api.js
+
+# Test friend requests specifically  
+node tests/test_friend_requests.js
+```
+
 ### **Cần help chi tiết?**
-📖 **[Setup Guide](docs/SETUP_GUIDE.md)** - Complete troubleshooting
+📖 **[Setup Guide](docs/SETUP_GUIDE.md)** - Complete troubleshooting  
+🧪 **[Test Scripts](tests/README.md)** - Automated testing tools
 
 ---
 
