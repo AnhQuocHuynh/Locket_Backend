@@ -159,18 +159,21 @@ UserSchema.pre('save', function(next) {
     next();
 });
 
-// Static method to create email verification token
+// Static method to create email verification code (6-digit OTP)
+// The code expires after 10 minutes by default.
 UserSchema.statics.createEmailVerificationToken = async function(userId) {
-    const crypto = require('crypto');
-    const token = crypto.randomBytes(32).toString('hex');
-    const expires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    // Generate a random 6-digit code (100000-999999)
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Set expiry to 10 minutes from now
+    const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
 
     await this.findByIdAndUpdate(userId, {
-        emailVerificationToken: token,
+        emailVerificationToken: code,
         emailVerificationExpires: expires
     });
 
-    return token;
+    return code;
 };
 
 // Static method to create password reset token

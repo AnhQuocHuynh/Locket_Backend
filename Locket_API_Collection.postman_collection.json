@@ -1,8 +1,8 @@
 {
 	"info": {
 		"_postman_id": "locket-backend-api-collection",
-		"name": "Locket Backend API",
-		"description": "Complete API collection for Locket Clone Backend testing - Updated with Friend System",
+		"name": "Picket Backend API",
+		"description": "Complete API collection for Picket Backend testing - Updated with Email OTP (6-digit code)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -259,14 +259,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"token\": \"VERIFICATION_TOKEN_HERE\"\n}"
+							"raw": "{\n  \"code\": \"123456\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/verify-email",
 							"host": ["{{baseUrl}}"],
 							"path": ["auth", "verify-email"]
 						},
-						"description": "Verify email with token"
+						"description": "Verify email with 6-digit code"
 					}
 				},
 				{

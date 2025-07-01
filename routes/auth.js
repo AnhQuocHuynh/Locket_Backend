@@ -48,18 +48,18 @@ router.post('/register', validateRegister, async (req, res) => {
         // Generate auth token
         const token = generateToken(user._id);
 
-        // Create email verification token and send email
-        const verificationToken = await User.createEmailVerificationToken(user._id);
+        // Create email verification code (6-digit) and send email
+        const verificationCode = await User.createEmailVerificationToken(user._id);
 
         try {
             await sendEmail({
                 to: user.email,
-                subject: 'Verify your Locket account',
+                subject: 'Verify your Picket account',
                 html: `<p>Hi ${user.username},</p>
-                       <p>Thank you for registering with Locket!</p>
+                       <p>Thank you for registering with Picket!</p>
                        <p>Your email verification code is:</p>
-                       <h2>${verificationToken}</h2>
-                       <p>This code will expire in 24 hours.</p>`
+                       <h2>${verificationCode}</h2>
+                       <p>This code will expire in 10 minutes.</p>`
             });
         } catch (emailErr) {
             console.error('Error sending verification email:', emailErr);
@@ -80,7 +80,7 @@ router.post('/register', validateRegister, async (req, res) => {
 
         // Expose token in non-production environments for testing convenience
         if (process.env.NODE_ENV !== 'production') {
-            responseData.devVerificationToken = verificationToken;
+            responseData.devVerificationCode = verificationCode;
         }
 
         res.status(201).json(responseData);
@@ -428,18 +428,18 @@ router.post('/reset-password', validateResetPassword, async (req, res) => {
 // @access  Public
 router.post('/verify-email', validateEmailVerification, async (req, res) => {
     try {
-        const { token } = req.body;
+        const { code } = req.body;
 
-        // Find user with valid verification token
+        // Find user with valid verification code
         const user = await User.findOne({
-            emailVerificationToken: token,
+            emailVerificationToken: code,
             emailVerificationExpires: { $gt: Date.now() }
         });
 
         if (!user) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid or expired verification token'
+                message: 'Invalid or expired verification code'
             });
         }
 
@@ -478,17 +478,17 @@ router.post('/send-verification-email', authenticate, async (req, res) => {
             return res.status(400).json({ success: false, message: 'Email is already verified' });
         }
 
-        // Generate new verification token
-        const verificationToken = await User.createEmailVerificationToken(user._id);
+        // Generate new verification code (6-digit)
+        const verificationCode = await User.createEmailVerificationToken(user._id);
 
         try {
             await sendEmail({
                 to: user.email,
-                subject: 'Verify your Locket account',
+                subject: 'Verify your Picket account',
                 html: `<p>Hi ${user.username},</p>
                        <p>Your new email verification code is:</p>
-                       <h2>${verificationToken}</h2>
-                       <p>This code will expire in 24 hours.</p>`
+                       <h2>${verificationCode}</h2>
+                       <p>This code will expire in 10 minutes.</p>`
             });
         } catch (emailErr) {
             console.error('Error sending verification email:', emailErr);
@@ -500,7 +500,7 @@ router.post('/send-verification-email', authenticate, async (req, res) => {
         };
 
         if (process.env.NODE_ENV !== 'production') {
-            responseData.devVerificationToken = verificationToken;
+            responseData.devVerificationCode = verificationCode;
         }
 
         res.json(responseData);

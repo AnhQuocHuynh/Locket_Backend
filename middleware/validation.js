@@ -138,11 +138,15 @@ const validateResetPassword = [
     handleValidationErrors
 ];
 
-// Validation rules for email verification
+// Validation rules for email verification (6-digit code)
 const validateEmailVerification = [
-    body('token')
+    body('code')
         .notEmpty()
-        .withMessage('Verification token is required'),
+        .withMessage('Verification code is required')
+        .isLength({ min: 6, max: 6 })
+        .withMessage('Verification code must be 6 digits')
+        .isNumeric()
+        .withMessage('Verification code must be numeric'),
     
     handleValidationErrors
 ];
