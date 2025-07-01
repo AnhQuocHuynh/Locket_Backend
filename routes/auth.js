@@ -10,6 +10,7 @@ const {
     validateEmailVerification
 } = require('../middleware/validation');
 const crypto = require('crypto');
+const { sendEmail } = require('../utils/emailService');
 
 const router = express.Router();
 
@@ -44,12 +45,30 @@ router.post('/register', validateRegister, async (req, res) => {
             password
         });
 
-        // Generate token
+        // Generate auth token
         const token = generateToken(user._id);
 
-        res.status(201).json({
+        // Create email verification code (6-digit) and send email
+        const verificationCode = await User.createEmailVerificationToken(user._id);
+
+        try {
+            await sendEmail({
+                to: user.email,
+                subject: 'Verify your Picket account',
+                html: `<p>Hi ${user.username},</p>
+                       <p>Thank you for registering with Picket!</p>
+                       <p>Your email verification code is:</p>
+                       <h2>${verificationCode}</h2>
+                       <p>This code will expire in 10 minutes.</p>`
+            });
+        } catch (emailErr) {
+            console.error('Error sending verification email:', emailErr);
+        }
+
+        // Prepare response data
+        const responseData = {
             success: true,
-            message: 'User registered successfully',
+            message: 'User registered successfully. A verification email has been sent.',
             token,
             user: {
                 id: user._id,
@@ -57,7 +76,14 @@ router.post('/register', validateRegister, async (req, res) => {
                 email: user.email,
                 profilePicture: user.profilePicture
             }
-        });
+        };
+
+        // Expose token in non-production environments for testing convenience
+        if (process.env.NODE_ENV !== 'production') {
+            responseData.devVerificationCode = verificationCode;
+        }
+
+        res.status(201).json(responseData);
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({
@@ -402,18 +428,18 @@ router.post('/reset-password', validateResetPassword, async (req, res) => {
 // @access  Public
 router.post('/verify-email', validateEmailVerification, async (req, res) => {
     try {
-        const { token } = req.body;
+        const { code } = req.body;
 
-        // Find user with valid verification token
+        // Find user with valid verification code
         const user = await User.findOne({
-            emailVerificationToken: token,
+            emailVerificationToken: code,
             emailVerificationExpires: { $gt: Date.now() }
         });
 
         if (!user) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid or expired verification token'
+                message: 'Invalid or expired verification code'
             });
         }
 
@@ -434,6 +460,53 @@ router.post('/verify-email', validateEmailVerification, async (req, res) => {
             message: 'Server error verifying email',
             error: error.message
         });
+    }
+});
+
+// @route   POST /api/auth/send-verification-email
+// @desc    Send or resend email verification token
+// @access  Private
+router.post('/send-verification-email', authenticate, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        if (user.emailVerified) {
+            return res.status(400).json({ success: false, message: 'Email is already verified' });
+        }
+
+        // Generate new verification code (6-digit)
+        const verificationCode = await User.createEmailVerificationToken(user._id);
+
+        try {
+            await sendEmail({
+                to: user.email,
+                subject: 'Verify your Picket account',
+                html: `<p>Hi ${user.username},</p>
+                       <p>Your new email verification code is:</p>
+                       <h2>${verificationCode}</h2>
+                       <p>This code will expire in 10 minutes.</p>`
+            });
+        } catch (emailErr) {
+            console.error('Error sending verification email:', emailErr);
+        }
+
+        const responseData = {
+            success: true,
+            message: 'Verification email sent successfully'
+        };
+
+        if (process.env.NODE_ENV !== 'production') {
+            responseData.devVerificationCode = verificationCode;
+        }
+
+        res.json(responseData);
+    } catch (error) {
+        console.error('Send verification email error:', error);
+        res.status(500).json({ success: false, message: 'Server error sending verification email', error: error.message });
     }
 });
 
