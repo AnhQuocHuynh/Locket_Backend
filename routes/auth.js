@@ -1,7 +1,15 @@
 const express = require('express');
 const User = require('../models/User');
 const { generateToken, authenticate } = require('../middleware/auth');
-const { validateRegister, validateLogin } = require('../middleware/validation');
+const { 
+    validateRegister, 
+    validateLogin, 
+    validateChangePassword,
+    validateForgotPassword,
+    validateResetPassword,
+    validateEmailVerification
+} = require('../middleware/validation');
+const crypto = require('crypto');
 
 const router = express.Router();
 
@@ -209,6 +217,221 @@ router.post('/logout', authenticate, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Server error during logout',
+            error: error.message
+        });
+    }
+});
+
+// @route   DELETE /api/auth/account
+// @desc    Delete user account
+// @access  Private
+router.delete('/account', authenticate, async (req, res) => {
+    try {
+        const { password } = req.body;
+
+        if (!password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password is required to delete account'
+            });
+        }
+
+        // Get user with password
+        const user = await User.findById(req.user.id).select('+password');
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Verify password
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid password'
+            });
+        }
+
+        // Delete user account
+        await User.findByIdAndDelete(req.user.id);
+
+        res.json({
+            success: true,
+            message: 'Account deleted successfully'
+        });
+    } catch (error) {
+        console.error('Delete account error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error deleting account',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/auth/change-password
+// @desc    Change user password
+// @access  Private
+router.post('/change-password', authenticate, validateChangePassword, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        // Get user with password
+        const user = await User.findById(req.user.id).select('+password');
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Verify current password
+        const isMatch = await user.comparePassword(currentPassword);
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: 'Current password is incorrect'
+            });
+        }
+
+        // Update password
+        user.password = newPassword;
+        await user.save();
+
+        res.json({
+            success: true,
+            message: 'Password changed successfully'
+        });
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error changing password',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/auth/forgot-password
+// @desc    Send password reset email
+// @access  Public
+router.post('/forgot-password', validateForgotPassword, async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            // Don't reveal if email exists or not for security
+            return res.json({
+                success: true,
+                message: 'If an account with that email exists, a password reset link has been sent'
+            });
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+        // Store reset token in user document
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpires = resetTokenExpiry;
+        await user.save();
+
+        // TODO: Send email with reset link
+        // For now, just return the token (in production, send via email)
+        console.log('Password reset token:', resetToken);
+
+        res.json({
+            success: true,
+            message: 'If an account with that email exists, a password reset link has been sent'
+        });
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error processing forgot password request',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/auth/reset-password
+// @desc    Reset password with token
+// @access  Public
+router.post('/reset-password', validateResetPassword, async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        // Find user with valid reset token
+        const user = await User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: Date.now() }
+        }).select('+password');
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset token'
+            });
+        }
+
+        // Update password and clear reset token
+        user.password = newPassword;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        res.json({
+            success: true,
+            message: 'Password reset successfully'
+        });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error resetting password',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/auth/verify-email
+// @desc    Verify email with token
+// @access  Public
+router.post('/verify-email', validateEmailVerification, async (req, res) => {
+    try {
+        const { token } = req.body;
+
+        // Find user with valid verification token
+        const user = await User.findOne({
+            emailVerificationToken: token,
+            emailVerificationExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired verification token'
+            });
+        }
+
+        // Mark email as verified
+        user.emailVerified = true;
+        user.emailVerificationToken = undefined;
+        user.emailVerificationExpires = undefined;
+        await user.save();
+
+        res.json({
+            success: true,
+            message: 'Email verified successfully'
+        });
+    } catch (error) {
+        console.error('Email verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error verifying email',
             error: error.message
         });
     }

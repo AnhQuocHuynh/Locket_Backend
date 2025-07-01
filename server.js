@@ -12,7 +12,7 @@ const geminiRoutes = require('./routes/gemini');
 const friendshipRoutes = require('./routes/friendship');
 const userRoutes = require('./routes/user');
 const styleRoutes = require('./routes/style');
-
+const notificationRoutes = require('./routes/notifications');
 // Initialize express app
 const app = express();
 
@@ -39,6 +39,7 @@ app.use('/api/friendship', friendshipRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/gemini', geminiRoutes);
 app.use('/api/style', styleRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -60,7 +61,10 @@ app.get('/', (req, res) => {
             auth: '/api/auth',
             posts: '/api/posts',
             health: '/api/health',
-            friendship: '/api/friendship'
+            friendship: '/api/friendship',
+            notifications: '/api/notifications',
+            user: '/api/user',
+            health: '/api/health'
         }
     });
 });

@@ -79,6 +79,22 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    emailVerificationToken: {
+        type: String,
+        select: false
+    },
+    emailVerificationExpires: {
+        type: Date,
+        select: false
+    },
+    resetPasswordToken: {
+        type: String,
+        select: false
+    },
+    resetPasswordExpires: {
+        type: Date,
+        select: false
+    },
     lastLogin: {
         type: Date,
         default: Date.now
@@ -110,6 +126,10 @@ UserSchema.methods.comparePassword = async function(candidatePassword) {
 UserSchema.methods.toJSON = function() {
     const userObject = this.toObject();
     delete userObject.password;
+    delete userObject.resetPasswordToken;
+    delete userObject.resetPasswordExpires;
+    delete userObject.emailVerificationToken;
+    delete userObject.emailVerificationExpires;
     return userObject;
 };
 
@@ -138,5 +158,33 @@ UserSchema.pre('save', function(next) {
     }
     next();
 });
+
+// Static method to create email verification token
+UserSchema.statics.createEmailVerificationToken = async function(userId) {
+    const crypto = require('crypto');
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
+    await this.findByIdAndUpdate(userId, {
+        emailVerificationToken: token,
+        emailVerificationExpires: expires
+    });
+
+    return token;
+};
+
+// Static method to create password reset token
+UserSchema.statics.createPasswordResetToken = async function(userId) {
+    const crypto = require('crypto');
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    await this.findByIdAndUpdate(userId, {
+        resetPasswordToken: token,
+        resetPasswordExpires: expires
+    });
+
+    return token;
+};
 
 module.exports = mongoose.model('User', UserSchema); 

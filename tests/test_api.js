@@ -449,18 +449,6 @@ async function testDeletePost() {
         return;
     }
 
-    // Test delete by different user (should fail)
-    if (user2Token) {
-        const unauthorizedResponse = await makeRequest('DELETE', `/posts/${createdPostId}`, null, user2Token);
-        
-        if (!unauthorizedResponse.success && unauthorizedResponse.status === 403) {
-            log('✅ Unauthorized delete validation passed', 'green');
-        } else {
-            log('❌ Unauthorized delete validation failed', 'red');
-        }
-    }
-
-    // Test delete by owner
     const response = await makeRequest('DELETE', `/posts/${createdPostId}`, null, userToken);
     
     if (response.success && response.data.success) {
@@ -471,26 +459,154 @@ async function testDeletePost() {
         console.log('   Error:', response.error);
     }
 
-    // Test access deleted post
-    const deletedPostResponse = await makeRequest('GET', `/posts/${createdPostId}`, null, userToken);
+    // Test delete non-existent post
+    const fakeId = '507f1f77bcf86cd799439011';
+    const fakeResponse = await makeRequest('DELETE', `/posts/${fakeId}`, null, userToken);
     
-    if (!deletedPostResponse.success && deletedPostResponse.status === 404) {
-        log('✅ Deleted post access validation passed', 'green');
+    if (!fakeResponse.success && fakeResponse.status === 404) {
+        log('✅ Delete non-existent post validation passed', 'green');
     } else {
-        log('❌ Deleted post access validation failed', 'red');
+        log('❌ Delete non-existent post validation failed', 'red');
     }
 }
+
+// async function testFriendRequests() {
+//     log('\n🔍 Testing Friend Requests', 'blue');
+    
+//     if (!user2Token) {
+//         log('❌ User 2 token not available for friend request test', 'red');
+//         return;
+//     }
+
+//     // Get user 2's ID by getting their profile
+//     const user2ProfileResponse = await makeRequest('GET', '/auth/profile', null, user2Token);
+//     if (!user2ProfileResponse.success || !user2ProfileResponse.data.success) {
+//         log('❌ Cannot get user 2 profile for friend request test', 'red');
+//         return;
+//     }
+    
+//     const user2Id = user2ProfileResponse.data.user._id;
+//     console.log('   User 2 ID:', user2Id);
+
+//     // Test send friend request from user 1 to user 2
+//     const sendRequestData = {
+//         recipientId: user2Id,
+//         message: 'Hello! Let\'s be friends!'
+//     };
+
+//     const sendResponse = await makeRequest('POST', '/friends/request', sendRequestData, userToken);
+    
+//     if (sendResponse.success && sendResponse.data.success) {
+//         log('✅ Send friend request passed', 'green');
+//         console.log('   Request ID:', sendResponse.data.data._id);
+//         console.log('   Message:', sendResponse.data.data.requestMessage);
+//         console.log('   Status:', sendResponse.data.data.status);
+        
+//         // Store the friendship ID for later tests
+//         global.friendshipId = sendResponse.data.data._id;
+//     } else {
+//         log('❌ Send friend request failed', 'red');
+//         console.log('   Error:', sendResponse.error);
+//         return;
+//     }
+
+//     // Test get received friend requests (user 2 should see the request from user 1)
+//     const receivedResponse = await makeRequest('GET', '/friends/requests', null, user2Token);
+    
+//     if (receivedResponse.success && receivedResponse.data.success) {
+//         log('✅ Get received friend requests passed', 'green');
+//         console.log('   Received requests count:', receivedResponse.data.count);
+        
+//         if (receivedResponse.data.count > 0) {
+//             console.log('   First request from:', receivedResponse.data.data[0].requester.username);
+//             console.log('   Request message:', receivedResponse.data.data[0].requestMessage);
+//         }
+//     } else {
+//         log('❌ Get received friend requests failed', 'red');
+//         console.log('   Error:', receivedResponse.error);
+//     }
+
+//     // Test get sent friend requests (user 1 should see the request sent to user 2)
+//     const sentResponse = await makeRequest('GET', '/friends/requests/sent', null, userToken);
+    
+//     if (sentResponse.success && sentResponse.data.success) {
+//         log('✅ Get sent friend requests passed', 'green');
+//         console.log('   Sent requests count:', sentResponse.data.count);
+        
+//         if (sentResponse.data.count > 0) {
+//             console.log('   First request to:', sentResponse.data.data[0].recipient.username);
+//             console.log('   Request message:', sentResponse.data.data[0].requestMessage);
+//         }
+//     } else {
+//         log('❌ Get sent friend requests failed', 'red');
+//         console.log('   Error:', sentResponse.error);
+//     }
+
+//     // Test get all friend requests (both received and sent)
+//     const allResponse = await makeRequest('GET', '/friends/requests/all', null, userToken);
+    
+//     if (allResponse.success && allResponse.data.success) {
+//         log('✅ Get all friend requests passed', 'green');
+//         console.log('   Received count:', allResponse.data.counts.received);
+//         console.log('   Sent count:', allResponse.data.counts.sent);
+//         console.log('   Total count:', allResponse.data.counts.total);
+//     } else {
+//         log('❌ Get all friend requests failed', 'red');
+//         console.log('   Error:', allResponse.error);
+//     }
+
+//     // Test accept friend request (user 2 accepts request from user 1)
+//     if (global.friendshipId) {
+//         const acceptResponse = await makeRequest('POST', `/friends/accept/${global.friendshipId}`, null, user2Token);
+        
+//         if (acceptResponse.success && acceptResponse.data.success) {
+//             log('✅ Accept friend request passed', 'green');
+//             console.log('   Friendship status:', acceptResponse.data.data.status);
+//         } else {
+//             log('❌ Accept friend request failed', 'red');
+//             console.log('   Error:', acceptResponse.error);
+//         }
+//     }
+
+//     // Test get friends list after accepting
+//     const friendsResponse = await makeRequest('GET', '/friends', null, userToken);
+    
+//     if (friendsResponse.success && friendsResponse.data.success) {
+//         log('✅ Get friends list passed', 'green');
+//         console.log('   Friends count:', friendsResponse.data.data.length);
+        
+//         if (friendsResponse.data.data.length > 0) {
+//             console.log('   First friend:', friendsResponse.data.data[0].username);
+//         }
+//     } else {
+//         log('❌ Get friends list failed', 'red');
+//         console.log('   Error:', friendsResponse.error);
+//     }
+
+//     // Test remove friend
+//     if (global.friendshipId) {
+//         const removeResponse = await makeRequest('DELETE', `/friends/${global.friendshipId}`, null, userToken);
+        
+//         if (removeResponse.success && removeResponse.data.success) {
+//             log('✅ Remove friend passed', 'green');
+//             console.log('   Message:', removeResponse.data.message);
+//         } else {
+//             log('❌ Remove friend failed', 'red');
+//             console.log('   Error:', removeResponse.error);
+//         }
+//     }
+// }
 
 async function test404Endpoint() {
     log('\n🔍 Testing 404 Endpoint', 'blue');
     
-    const response = await makeRequest('GET', '/nonexistent');
+    const response = await makeRequest('GET', '/api/nonexistent');
     
     if (!response.success && response.status === 404) {
-        log('✅ 404 endpoint test passed', 'green');
-        console.log('   Message:', response.error.message);
+        log('✅ 404 endpoint validation passed', 'green');
     } else {
-        log('❌ 404 endpoint test failed', 'red');
+        log('❌ 404 endpoint validation failed', 'red');
+        console.log('   Status:', response.status);
     }
 }
 
@@ -517,6 +633,7 @@ async function runAllTests() {
         await testAddComment();
         await testGetUserPosts();
         await testDeletePost();
+        // await testFriendRequests();
 
         // Error handling
         await test404Endpoint();

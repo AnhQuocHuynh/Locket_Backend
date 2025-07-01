@@ -190,180 +190,159 @@
 						},
 						"description": "Logout user (client should clear token)"
 					},
-					"auth": {
-						"type": "bearer",
-						"bearer": [
-							{
-								"key": "token",
-								"value": "{{token}}",
-								"type": "string"
-							}
-						]
+					"auth": {"type": "bearer", "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ] }
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"Password123\",\n  \"newPassword\": \"NewPassword123\",\n  \"confirmPassword\": \"NewPassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/change-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "change-password"]
+						},
+						"description": "Change user password"
+					},
+					"auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ] }
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/forgot-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "forgot-password"]
+						},
+						"description": "Request password reset email"
 					}
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"RESET_TOKEN_HERE\",\n  \"newPassword\": \"NewPassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/reset-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "reset-password"]
+						},
+						"description": "Reset password with token"
+					}
+				},
+				{
+					"name": "Verify Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"VERIFICATION_TOKEN_HERE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/verify-email",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "verify-email"]
+						},
+						"description": "Verify email with token"
+					}
+				},
+				{
+					"name": "Delete Account",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"Password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/account",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "account"]
+						},
+						"description": "Delete user account"
+					},
+					"auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ] }
 				}
 			]
 		},
 		{
-			"name": "Friends",
+			"name": "Notifications",
 			"item": [
 				{
-					"name": "Send Friend Request",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"recipientId\": \"USER_ID_HERE\",\n  \"message\": \"Hi! Let's be friends!\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/friends/request",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"friends",
-								"request"
-							]
-						},
-						"description": "Send friend request to another user"
-					},
-					"auth": {
-						"type": "bearer",
-						"bearer": [
-							{
-								"key": "token",
-								"value": "{{token}}",
-								"type": "string"
-							}
-						]
-					}
-				},
-				{
-					"name": "Accept Friend Request",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/friends/accept/FRIENDSHIP_ID_HERE",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"friends",
-								"accept",
-								"FRIENDSHIP_ID_HERE"
-							]
-						},
-						"description": "Accept a pending friend request"
-					},
-					"auth": {
-						"type": "bearer",
-						"bearer": [
-							{
-								"key": "token",
-								"value": "{{token}}",
-								"type": "string"
-							}
-						]
-					}
-				},
-				{
-					"name": "Get Friends List",
+					"name": "Get Notifications",
 					"request": {
 						"method": "GET",
 						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/friends?page=1&limit=20",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"friends"
-							],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "20"
-								}
-							]
-						},
-						"description": "Get user's friends list with pagination"
+						"url": { "raw": "{{baseUrl}}/notifications?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["notifications"], "query": [ {"key":"page","value":"1"},{"key":"limit","value":"20"} ] },
+						"description": "Get user's notifications with pagination"
 					},
-					"auth": {
-						"type": "bearer",
-						"bearer": [
-							{
-								"key": "token",
-								"value": "{{token}}",
-								"type": "string"
-							}
-						]
-					}
+					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
 				},
 				{
-					"name": "Get Friend Requests",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/friends/requests",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"friends",
-								"requests"
-							]
-						},
-						"description": "Get pending friend requests received"
-					},
-					"auth": {
-						"type": "bearer",
-						"bearer": [
-							{
-								"key": "token",
-								"value": "{{token}}",
-								"type": "string"
-							}
-						]
-					}
+					"name": "Mark Notification as Read",
+					"request": { "method":"PUT", "header":[], "url": { "raw":"{{baseUrl}}/notifications/NOTIFICATION_ID/read", "host":["{{baseUrl}}"], "path":["notifications","NOTIFICATION_ID","read"] }, "description":"Mark a notification as read" },
+					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
 				},
 				{
-					"name": "Remove Friend",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/friends/FRIENDSHIP_ID_HERE",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"friends",
-								"FRIENDSHIP_ID_HERE"
-							]
-						},
-						"description": "Remove friend or cancel friend request"
-					},
-					"auth": {
-						"type": "bearer",
-						"bearer": [
-							{
-								"key": "token",
-								"value": "{{token}}",
-								"type": "string"
-							}
-						]
-					}
+					"name": "Mark All Notifications as Read",
+					"request": { "method":"PUT", "header":[], "url": { "raw":"{{baseUrl}}/notifications/read-all", "host":["{{baseUrl}}"], "path":["notifications","read-all"] }, "description":"Mark all notifications as read" },
+					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
+				},
+				{
+					"name": "Get Unread Notification Count",
+					"request": { "method":"GET", "header":[], "url": { "raw":"{{baseUrl}}/notifications/unread-count", "host":["{{baseUrl}}"], "path":["notifications","unread-count"] }, "description":"Get unread notifications count" },
+					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
+				},
+				{
+					"name": "Delete Notification",
+					"request": { "method":"DELETE", "header":[], "url": { "raw":"{{baseUrl}}/notifications/NOTIFICATION_ID", "host":["{{baseUrl}}"], "path":["notifications","NOTIFICATION_ID"] }, "description":"Delete a notification" },
+					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Search Users",
+					"request": { "method":"GET", "header":[], "url": { "raw":"{{baseUrl}}/users/search?q=test", "host":["{{baseUrl}}"], "path":["users","search"], "query":[{"key":"q","value":"test"}] }, "description":"Search users" },
+					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
+				},
+				{
+					"name": "Get User Suggestions",
+					"request": { "method":"GET", "header":[], "url": { "raw":"{{baseUrl}}/users/suggestions", "host":["{{baseUrl}}"], "path":["users","suggestions"] }, "description":"Get user suggestions" },
+					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
+				},
+				{
+					"name": "Get User by ID",
+					"request": { "method":"GET", "header":[], "url": { "raw":"{{baseUrl}}/users/USER_ID_HERE", "host":["{{baseUrl}}"], "path":["users","USER_ID_HERE"] }, "description":"Get user profile by ID" },
+					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
 				}
 			]
 		},
