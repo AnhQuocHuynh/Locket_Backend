@@ -270,6 +270,29 @@
 					}
 				},
 				{
+					"name": "Send Verification Email",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/send-verification-email",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "send-verification-email"]
+						},
+						"description": "Send or resend verification email (requires authentication)"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
 					"name": "Delete Account",
 					"request": {
 						"method": "DELETE",

@@ -4,16 +4,18 @@ const axios = require('axios');
 const BASE_URL = 'http://localhost:3000';
 const API_URL = `${BASE_URL}/api`;
 
-// Test data
+// Generate unique identifiers to avoid duplicate key conflicts between test runs
+const UNIQUE = Date.now().toString(36);
+
 const testUser = {
-    username: 'testuser123',
-    email: 'test@example.com',
+    username: `u_${UNIQUE}`,
+    email: `test_${UNIQUE}@example.com`,
     password: 'Password123'
 };
 
 const testUser2 = {
-    username: 'testuser456',
-    email: 'test2@example.com',
+    username: `u2_${UNIQUE}`,
+    email: `test2_${UNIQUE}@example.com`,
     password: 'Password123'
 };
 
@@ -25,6 +27,7 @@ const testPost = {
 let userToken = '';
 let user2Token = '';
 let createdPostId = '';
+let verificationToken = '';
 
 // Color console output
 const colors = {
@@ -111,6 +114,7 @@ async function testUserRegistration() {
     if (response1.success && response1.data.success) {
         log('✅ User 1 registration passed', 'green');
         userToken = response1.data.token;
+        verificationToken = response1.data.devVerificationToken || '';
         console.log('   User ID:', response1.data.user.id);
         console.log('   Username:', response1.data.user.username);
     } else {
@@ -197,7 +201,7 @@ async function testUserProfile() {
 
     // Test update profile
     const updateData = {
-        username: 'updateduser123',
+        username: `u_${UNIQUE}_updated`,
         profilePicture: 'https://example.com/new-avatar.jpg'
     };
 
@@ -610,6 +614,51 @@ async function test404Endpoint() {
     }
 }
 
+// Test email verification for user 1
+async function testEmailVerification() {
+    log('\n🔍 Testing Email Verification', 'blue');
+
+    if (!verificationToken) {
+        log('⚠️ Verification token not available. Skipping email verification test (maybe running in production mode).', 'yellow');
+        return;
+    }
+
+    // Step 1: Verify email with token
+    const verifyResponse = await makeRequest('POST', '/auth/verify-email', { token: verificationToken });
+
+    if (verifyResponse.success && verifyResponse.data.success) {
+        log('✅ Verify email passed', 'green');
+    } else {
+        log('❌ Verify email failed', 'red');
+        console.log('   Error:', verifyResponse.error);
+        return;
+    }
+
+    // Step 2: Fetch profile to ensure emailVerified = true
+    const profileResponse = await makeRequest('GET', '/auth/profile', null, userToken);
+
+    if (profileResponse.success && profileResponse.data.user && profileResponse.data.user.emailVerified) {
+        log('✅ emailVerified flag is true', 'green');
+    } else {
+        log('❌ emailVerified flag not set', 'red');
+        console.log('   Profile data:', profileResponse.data);
+    }
+}
+
+// Test sending (resending) verification email for user 2
+async function testSendVerificationEmail() {
+    log('\n🔍 Testing Send Verification Email', 'blue');
+
+    const sendResp = await makeRequest('POST', '/auth/send-verification-email', null, user2Token);
+
+    if (sendResp.success && sendResp.data.success) {
+        log('✅ Send verification email passed', 'green');
+    } else {
+        log('❌ Send verification email failed', 'red');
+        console.log('   Error:', sendResp.error);
+    }
+}
+
 // Main test runner
 async function runAllTests() {
     log('🚀 Starting API Tests for Locket Backend', 'yellow');
@@ -623,6 +672,8 @@ async function runAllTests() {
         // Authentication tests
         await testUserRegistration();
         await testUserLogin();
+        await testEmailVerification();
+        await testSendVerificationEmail();
         await testUserProfile();
 
         // Posts tests
