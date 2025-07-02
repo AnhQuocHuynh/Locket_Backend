@@ -1,33 +1,38 @@
 {
 	"info": {
 		"_postman_id": "locket-backend-api-collection",
-		"name": "Picket Backend API",
-		"description": "Complete API collection for Picket Backend testing - Updated with Email OTP (6-digit code)",
+		"name": "Locket Backend API",
+		"description": "Complete API collection for Locket Backend testing - Organized and renamed for clarity.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Health Check",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{baseUrl}}/health",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"health"
-					]
-				},
-				"description": "Check if server is running and healthy"
-			}
-		},
-		{
-			"name": "Authentication",
+			"name": "Health & Status",
 			"item": [
 				{
-					"name": "Register User",
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check if server is running and healthy"
+					}
+				}
+			]
+		},
+		{
+			"name": "User Registration & Email Verification",
+			"item": [
+				{
+					"name": "Register New User",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -54,6 +59,66 @@
 					}
 				},
 				{
+					"name": "Verify Email (OTP)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/verify-email",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"verify-email"
+							]
+						},
+						"description": "Verify email with 6-digit code"
+					}
+				},
+				{
+					"name": "Resend Verification Email",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/send-verification-email",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"send-verification-email"
+							]
+						},
+						"description": "Send or resend verification email (requires authentication)"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "User Login & Profile",
+			"item": [
+				{
 					"name": "Login User",
 					"event": [
 						{
@@ -77,6 +142,13 @@
 									"pm.test(\"Response contains token\", function () {",
 									"    const jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('token');",
+									"});",
+									"",
+									"pm.test(\"Check for email verification requirement\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (pm.response.code === 403 && jsonData.requiresEmailVerification) {",
+									"        console.log('Email verification required before login');",
+									"    }",
 									"});"
 								],
 								"type": "text/javascript"
@@ -109,7 +181,7 @@
 					}
 				},
 				{
-					"name": "Get Profile",
+					"name": "Get User Profile",
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -137,7 +209,7 @@
 					}
 				},
 				{
-					"name": "Update Profile",
+					"name": "Update User Profile",
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -174,7 +246,7 @@
 					}
 				},
 				{
-					"name": "Logout",
+					"name": "Logout User",
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -190,14 +262,31 @@
 						},
 						"description": "Logout user (client should clear token)"
 					},
-					"auth": {"type": "bearer", "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ] }
-				},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Password Management",
+			"item": [
 				{
 					"name": "Change Password",
 					"request": {
 						"method": "POST",
 						"header": [
-							{ "key": "Content-Type", "value": "application/json" }
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -205,81 +294,15 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/change-password",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "change-password"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"change-password"
+							]
 						},
 						"description": "Change user password"
-					},
-					"auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ] }
-				},
-				{
-					"name": "Forgot Password",
-					"request": {
-						"method": "POST",
-						"header": [
-							{ "key": "Content-Type", "value": "application/json" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"test@example.com\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/auth/forgot-password",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "forgot-password"]
-						},
-						"description": "Request password reset email"
-					}
-				},
-				{
-					"name": "Reset Password",
-					"request": {
-						"method": "POST",
-						"header": [
-							{ "key": "Content-Type", "value": "application/json" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"token\": \"RESET_TOKEN_HERE\",\n  \"newPassword\": \"NewPassword123\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/auth/reset-password",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "reset-password"]
-						},
-						"description": "Reset password with token"
-					}
-				},
-				{
-					"name": "Verify Email",
-					"request": {
-						"method": "POST",
-						"header": [
-							{ "key": "Content-Type", "value": "application/json" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"code\": \"123456\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/auth/verify-email",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "verify-email"]
-						},
-						"description": "Verify email with 6-digit code"
-					}
-				},
-				{
-					"name": "Send Verification Email",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/auth/send-verification-email",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "send-verification-email"]
-						},
-						"description": "Send or resend verification email (requires authentication)"
 					},
 					"auth": {
 						"type": "bearer",
@@ -293,11 +316,100 @@
 					}
 				},
 				{
-					"name": "Delete Account",
+					"name": "Request Password Reset (Forgot Password)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/forgot-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"forgot-password"
+							]
+						},
+						"description": "Request password reset email"
+					}
+				},
+				{
+					"name": "Verify Password Reset Code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/verify-reset-code",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"verify-reset-code"
+							]
+						},
+						"description": "Verify 6-digit reset code before setting new password"
+					}
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"123456\",\n  \"newPassword\": \"NewPassword123\",\n  \"confirmPassword\": \"NewPassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/reset-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"reset-password"
+							]
+						},
+						"description": "Reset password with token"
+					}
+				}
+			]
+		},
+		{
+			"name": "Account Management",
+			"item": [
+				{
+					"name": "Delete User Account",
 					"request": {
 						"method": "DELETE",
 						"header": [
-							{ "key": "Content-Type", "value": "application/json" }
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -305,12 +417,26 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/account",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "account"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"account"
+							]
 						},
 						"description": "Delete user account"
 					},
-					"auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ] }
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
 				}
 			]
 		},
@@ -318,54 +444,249 @@
 			"name": "Notifications",
 			"item": [
 				{
-					"name": "Get Notifications",
+					"name": "Get All Notifications",
 					"request": {
 						"method": "GET",
 						"header": [],
-						"url": { "raw": "{{baseUrl}}/notifications?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["notifications"], "query": [ {"key":"page","value":"1"},{"key":"limit","value":"20"} ] },
+						"url": {
+							"raw": "{{baseUrl}}/notifications?page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
 						"description": "Get user's notifications with pagination"
 					},
-					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
 				},
 				{
 					"name": "Mark Notification as Read",
-					"request": { "method":"PUT", "header":[], "url": { "raw":"{{baseUrl}}/notifications/NOTIFICATION_ID/read", "host":["{{baseUrl}}"], "path":["notifications","NOTIFICATION_ID","read"] }, "description":"Mark a notification as read" },
-					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/NOTIFICATION_ID/read",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								"NOTIFICATION_ID",
+								"read"
+							]
+						},
+						"description": "Mark a notification as read"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
 				},
 				{
 					"name": "Mark All Notifications as Read",
-					"request": { "method":"PUT", "header":[], "url": { "raw":"{{baseUrl}}/notifications/read-all", "host":["{{baseUrl}}"], "path":["notifications","read-all"] }, "description":"Mark all notifications as read" },
-					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/read-all",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								"read-all"
+							]
+						},
+						"description": "Mark all notifications as read"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
 				},
 				{
 					"name": "Get Unread Notification Count",
-					"request": { "method":"GET", "header":[], "url": { "raw":"{{baseUrl}}/notifications/unread-count", "host":["{{baseUrl}}"], "path":["notifications","unread-count"] }, "description":"Get unread notifications count" },
-					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/unread-count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								"unread-count"
+							]
+						},
+						"description": "Get unread notifications count"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
 				},
 				{
 					"name": "Delete Notification",
-					"request": { "method":"DELETE", "header":[], "url": { "raw":"{{baseUrl}}/notifications/NOTIFICATION_ID", "host":["{{baseUrl}}"], "path":["notifications","NOTIFICATION_ID"] }, "description":"Delete a notification" },
-					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/NOTIFICATION_ID",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								"NOTIFICATION_ID"
+							]
+						},
+						"description": "Delete a notification"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
 				}
 			]
 		},
 		{
-			"name": "Users",
+			"name": "User Search & Suggestions",
 			"item": [
 				{
 					"name": "Search Users",
-					"request": { "method":"GET", "header":[], "url": { "raw":"{{baseUrl}}/users/search?q=test", "host":["{{baseUrl}}"], "path":["users","search"], "query":[{"key":"q","value":"test"}] }, "description":"Search users" },
-					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/search?q=test",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "test"
+								}
+							]
+						},
+						"description": "Search users"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
 				},
 				{
 					"name": "Get User Suggestions",
-					"request": { "method":"GET", "header":[], "url": { "raw":"{{baseUrl}}/users/suggestions", "host":["{{baseUrl}}"], "path":["users","suggestions"] }, "description":"Get user suggestions" },
-					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/suggestions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"suggestions"
+							]
+						},
+						"description": "Get user suggestions"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
 				},
 				{
 					"name": "Get User by ID",
-					"request": { "method":"GET", "header":[], "url": { "raw":"{{baseUrl}}/users/USER_ID_HERE", "host":["{{baseUrl}}"], "path":["users","USER_ID_HERE"] }, "description":"Get user profile by ID" },
-					"auth": { "type":"bearer", "bearer":[{"key":"token","value":"{{token}}","type":"string"}] }
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/USER_ID_HERE",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"USER_ID_HERE"
+							]
+						},
+						"description": "Get user profile by ID"
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
 				}
 			]
 		},
@@ -373,7 +694,7 @@
 			"name": "Posts",
 			"item": [
 				{
-					"name": "Get Posts",
+					"name": "Get All Posts (Feed)",
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -410,7 +731,7 @@
 					}
 				},
 				{
-					"name": "Create Post",
+					"name": "Create New Post",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -446,7 +767,7 @@
 					}
 				},
 				{
-					"name": "Get Single Post",
+					"name": "Get Single Post by ID",
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -474,7 +795,7 @@
 					}
 				},
 				{
-					"name": "Update Post",
+					"name": "Update Post by ID",
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -511,7 +832,7 @@
 					}
 				},
 				{
-					"name": "Delete Post",
+					"name": "Delete Post by ID",
 					"request": {
 						"method": "DELETE",
 						"header": [],
@@ -539,7 +860,7 @@
 					}
 				},
 				{
-					"name": "Like Post",
+					"name": "Like or Unlike Post",
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -568,7 +889,7 @@
 					}
 				},
 				{
-					"name": "Add Comment",
+					"name": "Add Comment to Post",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -606,7 +927,7 @@
 					}
 				},
 				{
-					"name": "Get User Posts",
+					"name": "Get Posts by User ID",
 					"request": {
 						"method": "GET",
 						"header": [],
