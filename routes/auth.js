@@ -128,15 +128,15 @@ router.post('/login', validateLogin, async (req, res) => {
             });
         }
 
-        // Check if email is verified
-        if (!user.emailVerified) {
-            return res.status(403).json({
-                success: false,
-                message: 'Please verify your email before logging in',
-                requiresEmailVerification: true,
-                email: user.email
-            });
-        }
+        // // Check if email is verified
+        // if (!user.emailVerified) {
+        //     return res.status(403).json({
+        //         success: false,
+        //         message: 'Please verify your email before logging in',
+        //         requiresEmailVerification: true,
+        //         email: user.email
+        //     });
+        // }
 
         // Update last login
         user.lastLogin = new Date();
