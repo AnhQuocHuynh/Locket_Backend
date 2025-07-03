@@ -160,9 +160,14 @@ async function testUserLogin() {
     const response = await makeRequest('POST', '/auth/login', loginData);
     
     if (response.success && response.data.success) {
+        // Normal login success (email already verified)
         log('✅ User login passed', 'green');
         userToken = response.data.token;
         console.log('   Token received:', userToken.substring(0, 20) + '...');
+    } else if (!response.success && response.status === 403) {
+        // Login blocked due to unverified email (expected before verification)
+        log('✅ Login blocked as expected for unverified email', 'green');
+        console.log('   Message:', response.error);
     } else {
         log('❌ User login failed', 'red');
         console.log('   Error:', response.error);

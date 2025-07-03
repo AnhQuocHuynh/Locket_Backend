@@ -178,16 +178,16 @@ UserSchema.statics.createEmailVerificationToken = async function(userId) {
 
 // Static method to create password reset token
 UserSchema.statics.createPasswordResetToken = async function(userId) {
-    const crypto = require('crypto');
-    const token = crypto.randomBytes(32).toString('hex');
+    // Generate a random 6-digit code (100000-999999)
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
 
     await this.findByIdAndUpdate(userId, {
-        resetPasswordToken: token,
+        resetPasswordToken: code,
         resetPasswordExpires: expires
     });
 
-    return token;
+    return code;
 };
 
 module.exports = mongoose.model('User', UserSchema); 

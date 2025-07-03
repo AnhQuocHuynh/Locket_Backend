@@ -117,9 +117,13 @@ const validateForgotPassword = [
 
 // Validation rules for reset password
 const validateResetPassword = [
-    body('token')
+    body('code')
         .notEmpty()
-        .withMessage('Reset token is required'),
+        .withMessage('Reset code is required')
+        .isLength({ min: 6, max: 6 })
+        .withMessage('Reset code must be 6 digits')
+        .isNumeric()
+        .withMessage('Reset code must be numeric'),
     
     body('newPassword')
         .isLength({ min: 6 })
@@ -162,6 +166,19 @@ const validateUserSearch = [
     handleValidationErrors
 ];
 
+// Validation rules for reset password code only (6-digit)
+const validateResetCode = [
+    body('code')
+        .notEmpty()
+        .withMessage('Reset code is required')
+        .isLength({ min: 6, max: 6 })
+        .withMessage('Reset code must be 6 digits')
+        .isNumeric()
+        .withMessage('Reset code must be numeric'),
+
+    handleValidationErrors
+];
+
 module.exports = {
     validateRegister,
     validateLogin,
@@ -173,5 +190,6 @@ module.exports = {
     validateResetPassword,
     validateEmailVerification,
     validateUserSearch,
-    handleValidationErrors
+    handleValidationErrors,
+    validateResetCode
 }; 
